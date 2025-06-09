@@ -5,6 +5,7 @@ namespace Php\PhpWebLogin\Service;
 use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Domain\User;
 use Php\PhpWebLogin\Exception\ValidationException;
+use Php\PhpWebLogin\Model\UserLoginRequest;
 use Php\PhpWebLogin\Model\UserRegisterRequest;
 use Php\PhpWebLogin\Repository\UserRepository;
 use Php\PhpWebLogin\Repository\UserRepositoryImpl;
@@ -63,6 +64,51 @@ class UserServiceImplTest extends TestCase {
         $request->password = "rahasia";
 
         $response = $this->userService->register($request);
+    }
+
+    public function testNotFound(): void {
+        $this->expectException(ValidationException::class);
+
+        $request = new UserLoginRequest();
+        $request->id = "piter";
+        $request->password = "piter";
+
+        $this->userService->login($request);
+    }
+
+    public function testWrongPassword(): void {
+        $user = new User();
+        $user->id = "piter";
+        $user->name = "Piter";
+        $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+        $this->userRepository->save($user);
+
+        $this->expectException(ValidationException::class);
+
+        $request = new UserLoginRequest();
+        $request->id = "piter";
+        $request->password = "piterdsa";
+
+        $this->userService->login($request);
+    }
+
+    public function testLoginSuccess(): void {
+        $user = new User();
+        $user->id = "piter";
+        $user->name = "Piter";
+        $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+        $this->userRepository->save($user);
+
+        $request = new UserLoginRequest();
+        $request->id = "piter";
+        $request->password = "rahasia";
+
+        $result = $this->userService->login($request);
+
+        self::assertEquals($request->id, $result->user->id);
+        self::assertTrue(password_verify($request->password, $result->user->password));
     }
 
 

@@ -5,12 +5,13 @@ namespace Php\PhpWebLogin\Controller;
 use Php\PhpWebLogin\App\View;
 use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Exception\ValidationException;
+use Php\PhpWebLogin\Model\UserLoginRequest;
 use Php\PhpWebLogin\Model\UserRegisterRequest;
 use Php\PhpWebLogin\Repository\UserRepositoryImpl;
 use Php\PhpWebLogin\Service\UserService;
 use Php\PhpWebLogin\Service\UserServiceImpl;
 
-class RegisterController {
+class UserController {
 
     private UserService $userService;
 
@@ -41,5 +42,26 @@ class RegisterController {
                 "error" => $exception->getMessage()
             ]);
         }
+    }
+
+    public function getLogin(): void{
+        View::render("User/login", ["title" => "Login user"]);
+    }
+    
+    public function postLogin(): void {
+        $request = new UserLoginRequest();
+        $request->id = $_POST['id'];
+        $request->password = $_POST['password'];
+
+        try {
+            $this->userService->login($request);
+            View::redirect("/");
+        }catch (ValidationException $exception){
+            View::render("User/login", [
+                "title" => "Login user",
+                "error" => $exception->getMessage()
+            ]);
+        }
+
     }
 }
