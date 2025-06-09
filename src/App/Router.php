@@ -3,8 +3,6 @@
 namespace Php\PhpWebLogin\App;
 
 use Php\PhpWebLogin\Controller\HomeController;
-use Php\PhpWebLogin\Controller\ProductController;
-
 
 class Router {
 
