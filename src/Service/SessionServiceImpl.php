@@ -39,7 +39,7 @@ class SessionServiceImpl implements SessionService {
     }
 
     function current(): ?User {
-        $sessionId = $_COOKIE[self::$COOKIE_NAME ?? ''];
+        $sessionId = $_COOKIE[self::$COOKIE_NAME] ?? '';
 
         $session = $this->sessionRepository->findSessionById($sessionId);
         if ($session == null){

@@ -14,6 +14,7 @@ require_once __DIR__ . "/../vendor/autoload.php";
 Database::getConnection("prod");
 
 Router::add('GET', '/', HomeController::class, 'index', []);
+
 Router::add('GET', '/users/register', UserController::class, 'getRegister', []);
 Router::add('POST', '/users/register', UserController::class, 'postRegister', []);
 

@@ -6,10 +6,19 @@ namespace Php\PhpWebLogin\App{
     }
 }
 
+namespace Php\PhpWebLogin\Service{
+
+    function setcookie(string $name, string $value, int $time , string $path): void {
+        echo "$name: $value";
+    }
+}
+
 namespace Php\PhpWebLogin\Controller {
 
     use Php\PhpWebLogin\Config\Database;
     use Php\PhpWebLogin\Domain\User;
+    use Php\PhpWebLogin\Repository\SessionRepository;
+    use Php\PhpWebLogin\Repository\SessionRepositoryImpl;
     use Php\PhpWebLogin\Repository\UserRepository;
     use Php\PhpWebLogin\Repository\UserRepositoryImpl;
     use PHPUnit\Framework\TestCase;
@@ -18,9 +27,14 @@ namespace Php\PhpWebLogin\Controller {
 
         private UserController $controller;
         private UserRepository $userRepository;
+        private SessionRepository $sessionRepository;
 
         protected function setUp(): void {
             $this->controller = new UserController();
+
+            $this->sessionRepository = new SessionRepositoryImpl(Database::getConnection());
+            $this->sessionRepository->deleteAll();
+
             $this->userRepository = new UserRepositoryImpl(Database::getConnection());
 
             $this->userRepository->deleteAll();
@@ -109,6 +123,7 @@ namespace Php\PhpWebLogin\Controller {
             putenv("mode=test");
             $this->controller->postLogin();
 
+            $this->expectOutputRegex("[X-PTR-SESSION: ]");
             $this->expectOutputRegex("[Location: /]");
         }
 

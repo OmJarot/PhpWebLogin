@@ -7,7 +7,10 @@ use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Exception\ValidationException;
 use Php\PhpWebLogin\Model\UserLoginRequest;
 use Php\PhpWebLogin\Model\UserRegisterRequest;
+use Php\PhpWebLogin\Repository\SessionRepositoryImpl;
 use Php\PhpWebLogin\Repository\UserRepositoryImpl;
+use Php\PhpWebLogin\Service\SessionService;
+use Php\PhpWebLogin\Service\SessionServiceImpl;
 use Php\PhpWebLogin\Service\UserService;
 use Php\PhpWebLogin\Service\UserServiceImpl;
 
@@ -15,10 +18,15 @@ class UserController {
 
     private UserService $userService;
 
+    private SessionService $sessionService;
+
     public function __construct() {
         $connection = Database::getConnection();
         $userRepository = new UserRepositoryImpl($connection);
         $this->userService = new UserServiceImpl($userRepository);
+
+        $sessionRepository = new SessionRepositoryImpl(Database::getConnection());
+        $this->sessionService = new SessionServiceImpl($sessionRepository, $userRepository);
     }
 
     public function getRegister(): void {
@@ -54,7 +62,9 @@ class UserController {
         $request->password = $_POST['password'];
 
         try {
-            $this->userService->login($request);
+            $response = $this->userService->login($request);
+            $this->sessionService->create($response->user->id);
+
             View::redirect("/");
         }catch (ValidationException $exception){
             View::render("User/login", [

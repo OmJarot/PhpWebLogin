@@ -4,16 +4,27 @@ namespace Php\PhpWebLogin\Repository;
 
 use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Domain\Session;
+use Php\PhpWebLogin\Domain\User;
 use PHPUnit\Framework\TestCase;
 
 class SessionRepositoryTest extends TestCase {
 
     private SessionRepository $sessionRepository;
+    private UserRepository $userRepository;
 
     protected function setUp(): void {
         $this->sessionRepository = new SessionRepositoryImpl(Database::getConnection());
+        $this->userRepository = new UserRepositoryImpl(Database::getConnection());
 
         $this->sessionRepository->deleteAll();
+        $this->userRepository->deleteAll();
+
+        $user = new User();
+        $user->id = "piter";
+        $user->name = "Piter";
+        $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+        $this->userRepository->save($user);
     }
 
     public function testSaveSuccess(): void {
