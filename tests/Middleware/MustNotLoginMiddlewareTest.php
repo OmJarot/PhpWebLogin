@@ -1,11 +1,7 @@
 <?php
-
-namespace Php\PhpWebLogin\App{
-    function header(string $value): void {//agar bisa lihat redirect
-        echo $value;
-    }
-}
 namespace Php\PhpWebLogin\Middleware {
+
+    require_once __DIR__ . "/../Helper/helper.php";
 
 use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Domain\Session;

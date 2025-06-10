@@ -2,6 +2,8 @@
 
 namespace Php\PhpWebLogin\Service;
 
+require_once __DIR__ . "/../Helper/helper.php";
+
 use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Domain\Session;
 use Php\PhpWebLogin\Domain\User;
@@ -10,10 +12,6 @@ use Php\PhpWebLogin\Repository\SessionRepositoryImpl;
 use Php\PhpWebLogin\Repository\UserRepository;
 use Php\PhpWebLogin\Repository\UserRepositoryImpl;
 use PHPUnit\Framework\TestCase;
-
-function setcookie(string $name, string $value) {
-    echo "$name: $value";
-}
 
 class SessionServiceImplTest extends TestCase {
 
