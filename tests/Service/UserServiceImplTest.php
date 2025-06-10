@@ -6,7 +6,9 @@ use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Domain\User;
 use Php\PhpWebLogin\Exception\ValidationException;
 use Php\PhpWebLogin\Model\UserLoginRequest;
+use Php\PhpWebLogin\Model\UserProfileUpdateRequest;
 use Php\PhpWebLogin\Model\UserRegisterRequest;
+use Php\PhpWebLogin\Repository\SessionRepositoryImpl;
 use Php\PhpWebLogin\Repository\UserRepository;
 use Php\PhpWebLogin\Repository\UserRepositoryImpl;
 use PHPUnit\Framework\TestCase;
@@ -18,6 +20,10 @@ class UserServiceImplTest extends TestCase {
 
     protected function setUp(): void {
         $connection = Database::getConnection();
+
+        $sessionRepository = new SessionRepositoryImpl($connection);
+        $sessionRepository->deleteAll();
+
         $this->userRepository = new UserRepositoryImpl($connection);
         $this->userService = new UserServiceImpl($this->userRepository);
         $this->userRepository->deleteAll();
@@ -109,6 +115,49 @@ class UserServiceImplTest extends TestCase {
 
         self::assertEquals($request->id, $result->user->id);
         self::assertTrue(password_verify($request->password, $result->user->password));
+    }
+
+    public function testUpdateSuccess(): void {
+        $user = new User();
+        $user->id = "piter";
+        $user->name = "Piter";
+        $user->password = "rahasia";
+
+        $this->userRepository->save($user);
+
+        $request = new UserProfileUpdateRequest();
+        $request->id = "piter";
+        $request->name = "piter new";
+
+        $this->userService->updateProfile($request);
+
+        $result = $this->userRepository->findById($request->id);
+
+        self::assertEquals($request->name, $result->name);
+    }
+
+    public function testValidationError(): void {
+        $this->expectException(ValidationException::class);
+
+        $request = new UserProfileUpdateRequest();
+        $request->id = "";
+        $request->name = "";
+
+        $this->userService->updateProfile($request);
+    }
+
+    public function testUpdateNotFound(): void {
+        $this->expectException(ValidationException::class);
+
+        $request = new UserProfileUpdateRequest();
+        $request->id = "piter";
+        $request->name = "piter new";
+
+        $this->userService->updateProfile($request);
+
+        $result = $this->userRepository->findById($request->id);
+
+        self::assertEquals($request->name, $result->name);
     }
 
 

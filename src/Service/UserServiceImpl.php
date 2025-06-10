@@ -7,6 +7,8 @@ use Php\PhpWebLogin\Domain\User;
 use Php\PhpWebLogin\Exception\ValidationException;
 use Php\PhpWebLogin\Model\UserLoginRequest;
 use Php\PhpWebLogin\Model\UserLoginResponse;
+use Php\PhpWebLogin\Model\UserProfileUpdateRequest;
+use Php\PhpWebLogin\Model\UserProfileUpdateResponse;
 use Php\PhpWebLogin\Model\UserRegisterRequest;
 use Php\PhpWebLogin\Model\UserRegisterResponse;
 use Php\PhpWebLogin\Repository\UserRepository;
@@ -74,6 +76,39 @@ class UserServiceImpl implements UserService {
         if ($request ->id == null || $request->password == null ||
             $request->id == "" || $request->password == ""){
             throw new ValidationException("Id, Password can not blank");
+        }
+    }
+
+    function updateProfile(UserProfileUpdateRequest $request): UserProfileUpdateResponse {
+        $this->validationUserProfileUpdateRequest($request);
+
+        try {
+            Database::beginTransaction();
+            $user = $this->userRepository->findById($request->id);
+            if ($user == null){
+                throw new ValidationException("User is not found");
+            }
+
+            $user->name = $request->name;
+
+            $result = $this->userRepository->update($user);
+
+            Database::commitTransaction();
+
+            $response = new UserProfileUpdateResponse();
+            $response->user = $result;
+            return $response;
+
+        }catch (\Exception $exception){
+            Database::rollbackTransaction();
+            throw $exception;
+        }
+    }
+
+    private function validationUserProfileUpdateRequest(UserProfileUpdateRequest $request): void {
+        if ($request ->name == null || $request->id == null ||
+            $request->name == "" || $request->id == ""){
+            throw new ValidationException("Id, name can not blank");
         }
     }
 }

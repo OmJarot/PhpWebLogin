@@ -12,4 +12,6 @@ interface UserRepository {
 
     function deleteAll(): void;
 
+    function update(User $user): User;
+
 }

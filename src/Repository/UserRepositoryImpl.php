@@ -36,4 +36,11 @@ class UserRepositoryImpl implements UserRepository {
     public function deleteAll(): void {
         $this->connection->exec("Delete from users");
     }
+
+    public function update(User $user):User {
+        $statement = $this->connection->prepare("update users set name = ?, password = ? where id = ?");
+        $statement->execute([$user->name, $user->password, $user->id]);
+        return $user;
+    }
+
 }

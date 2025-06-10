@@ -6,6 +6,7 @@ use Php\PhpWebLogin\App\View;
 use Php\PhpWebLogin\Config\Database;
 use Php\PhpWebLogin\Exception\ValidationException;
 use Php\PhpWebLogin\Model\UserLoginRequest;
+use Php\PhpWebLogin\Model\UserProfileUpdateRequest;
 use Php\PhpWebLogin\Model\UserRegisterRequest;
 use Php\PhpWebLogin\Repository\SessionRepositoryImpl;
 use Php\PhpWebLogin\Repository\UserRepositoryImpl;
@@ -72,6 +73,44 @@ class UserController {
                 "error" => $exception->getMessage()
             ]);
         }
+    }
 
+    function getUpdateProfile(): void {
+        $user = $this->sessionService->current();
+        View::render("User/profile", [
+            "title" => "Update profile",
+            "user" => [
+                "id" => $user->id,
+                "name" => $user->name
+            ]
+        ]);
+    }
+
+    function postUpdateProfile(): void {
+        $user = $this->sessionService->current();
+
+        $request = new UserProfileUpdateRequest();
+        $request->id = $user->id;
+        $request->name = trim($_POST['name']);
+
+        try {
+            $this->userService->updateProfile($request);
+            View::redirect("/");
+        }catch (\Exception $exception){
+            View::render("User/profile", [
+                "title" => "Update profile",
+                "error" => $exception->getMessage(),
+                "user" => [
+                    "id" => $user->id,
+                    "name" => $_POST['name']
+                ]
+            ]);
+        }
+
+    }
+
+    function logout(): void{
+        $this->sessionService->destroy();
+        View::redirect("/");
     }
 }

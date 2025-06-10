@@ -1,6 +1,5 @@
 <?php
 namespace Php\PhpWebLogin\App{
-
     function header(string $value): void {//agar bisa lihat redirect
         echo $value;
     }
@@ -16,11 +15,13 @@ namespace Php\PhpWebLogin\Service{
 namespace Php\PhpWebLogin\Controller {
 
     use Php\PhpWebLogin\Config\Database;
+    use Php\PhpWebLogin\Domain\Session;
     use Php\PhpWebLogin\Domain\User;
     use Php\PhpWebLogin\Repository\SessionRepository;
     use Php\PhpWebLogin\Repository\SessionRepositoryImpl;
     use Php\PhpWebLogin\Repository\UserRepository;
     use Php\PhpWebLogin\Repository\UserRepositoryImpl;
+    use Php\PhpWebLogin\Service\SessionServiceImpl;
     use PHPUnit\Framework\TestCase;
 
     class UserControllerTest extends TestCase {
@@ -168,6 +169,111 @@ namespace Php\PhpWebLogin\Controller {
             $this->expectOutputRegex("[Id]");
             $this->expectOutputRegex("[Password]");
             $this->expectOutputRegex("[Id or Password is wrong]");
+        }
+
+        public function testLogout(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+            putenv("mode=test");
+            $this->controller->logout();
+
+            $this->expectOutputRegex("[X-PTR-SESSION: ]");
+            $this->expectOutputRegex("[Location: /]");
+        }
+
+        public function testGetUpdateProfile(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+
+            $this->controller->getUpdateProfile();
+
+            $this->expectOutputRegex("[Profile]");
+            $this->expectOutputRegex("[Id]");
+            $this->expectOutputRegex("[piter]");
+            $this->expectOutputRegex("[Name]");
+            $this->expectOutputRegex("[Piter]");
+        }
+
+
+        public function testPostUpdateProfile(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+
+            $_POST['name'] = "piter new";
+
+            putenv("mode=test");
+
+            $this->controller->postUpdateProfile();
+
+            $this->expectOutputRegex("[Location: /]");
+
+            $result = $this->userRepository->findById("piter");
+            self::assertEquals("piter new", $result->name);
+        }
+
+        public function testUpdateProfileValidationError(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+
+            $_POST['name'] = "";
+
+            putenv("mode=test");
+
+            $this->controller->postUpdateProfile();
+
+            $this->expectOutputRegex("[Profile]");
+            $this->expectOutputRegex("[Id]");
+            $this->expectOutputRegex("[piter]");
+            $this->expectOutputRegex("[Name]");
+            $this->expectOutputRegex("[Id, name can not blank]");
         }
 
 
