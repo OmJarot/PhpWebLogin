@@ -276,6 +276,113 @@ namespace Php\PhpWebLogin\Controller {
             $this->expectOutputRegex("[Id, name can not blank]");
         }
 
+        public function testGetUpdatePassword(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+
+            $this->controller->getUpdateProfile();
+
+            $this->expectOutputRegex("[Password]");
+            $this->expectOutputRegex("[Id]");
+            $this->expectOutputRegex("[piter]");
+        }
+        public function testPostUpdatePassword(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+
+            putenv("mode=test");
+
+            $_POST["oldPassword"] = "rahasia";
+            $_POST["newPassword"] = "piter new";
+            $this->controller->postUpdatePassword();
+
+            $this->expectOutputRegex("[Location: /]");
+
+            $result = $this->userRepository->findById($user->id);
+
+            self::assertTrue(password_verify("piter new", $result->password));
+        }
+
+        public function testPostUpdatePasswordValidationError(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+
+            putenv("mode=test");
+
+            $_POST["oldPassword"] = "";
+            $_POST["newPassword"] = "";
+            $this->controller->postUpdatePassword();
+
+            $this->expectOutputRegex("[Password]");
+            $this->expectOutputRegex("[Id]");
+            $this->expectOutputRegex("[piter]");
+            $this->expectOutputRegex("[Id, Old password, new Password can not blank]");
+        }
+
+        public function testPostUpdatePasswordWrongOldPassword(): void {
+            $user = new User();
+            $user->id = "piter";
+            $user->name = "Piter";
+            $user->password = password_hash("rahasia", PASSWORD_BCRYPT);
+
+            $this->userRepository->save($user);
+
+            $session = new Session();
+            $session->id = uniqid();
+            $session->userId = "piter";
+
+            $this->sessionRepository->save($session);
+
+            $_COOKIE[SessionServiceImpl::$COOKIE_NAME] = $session->id;
+
+            putenv("mode=test");
+
+            $_POST["oldPassword"] = "salah";
+            $_POST["newPassword"] = "piter new";
+            $this->controller->postUpdatePassword();
+
+            $this->expectOutputRegex("[Password]");
+            $this->expectOutputRegex("[Id]");
+            $this->expectOutputRegex("[piter]");
+            $this->expectOutputRegex("[Old password is wrong]");
+        }
+
 
     }
 }
